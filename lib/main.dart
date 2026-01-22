@@ -115,9 +115,14 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-
-
-
+            Text('You have pushed the button this many times:',
+              style: TextStyle(fontSize: myFontSize)
+            ),
+            Text(
+              '$_counter',
+              style: TextStyle(fontSize: myFontSize),
+            ),
+            Slider(value: myFontSize, max:100.0, onChanged: setNewValue, min:0.0 )
           ],
         ),
       ),
