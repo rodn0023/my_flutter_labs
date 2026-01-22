@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
-import 'labs/login.dart';
 
-void main() {
-  runApp(const Login());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Login extends StatelessWidget {
+  const Login({super.key});
 
   // This widget is the root of your application.
   @override
@@ -14,21 +9,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
@@ -55,26 +35,37 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  var _counter = 0.0;
-  var myFontSize = 30.0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      if(_counter < 99.0)
-      _counter++;
-    });
+  var password = 'placeholder';
+  late TextEditingController loginController;
+  late TextEditingController passwordController;
+  var imageSource = 'images/question-mark.png';
+  var imageDescription = 'a bundle of question marks';
+
+  @override
+  void initState() {
+    super.initState();
+    loginController = TextEditingController();
+    passwordController = TextEditingController();
   }
 
-  void setNewValue(double value)
-  {
+  @override
+  void dispose() {
+    loginController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void buttonClicked() {
     setState(() {
-      _counter = value;
-      myFontSize = value;
+      password = passwordController.value.text;
+      if (password == 'ASDF') {
+        imageSource = 'images/idea.png';
+        imageDescription = 'a glowing lightbulb';
+      } else {
+        imageSource = 'images/stop.png';
+        imageDescription = 'a stop sign';
+      }
     });
   }
 
@@ -115,16 +106,26 @@ class _MyHomePageState extends State<MyHomePage> {
           // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
-
-
-
+            TextField(controller: loginController,
+                decoration: InputDecoration(
+                    hintText:"John Smith",
+                    border: OutlineInputBorder(),
+                    labelText: "Login"
+                )),
+            TextField(controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Password"
+                )),
+            ElevatedButton( onPressed: buttonClicked, child:  Text("Login")  ),
+            Text(password,
+            ),
+            Semantics(label: imageDescription,
+                child: Image.asset(imageSource, height:300.0, width:300.0)
+            )
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
