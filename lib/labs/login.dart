@@ -1,3 +1,4 @@
+import 'package:encrypted_shared_preferences/encrypted_shared_preferences.dart';
 import 'package:flutter/material.dart';
 
 class Login extends StatelessWidget {
@@ -19,15 +20,6 @@ class Login extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -42,11 +34,41 @@ class _MyHomePageState extends State<MyHomePage> {
   var imageSource = 'images/question-mark.png';
   var imageDescription = 'a bundle of question marks';
 
+  late EncryptedSharedPreferences prefs;
+  var snackBarAppeared = false;
+
   @override
   void initState() {
     super.initState();
     loginController = TextEditingController();
     passwordController = TextEditingController();
+
+    prefs = EncryptedSharedPreferences();
+
+    void displaySnackBar() {
+      if (snackBarAppeared) return;
+      snackBarAppeared = true;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("User information successfully loaded!")
+          )
+      );
+    }
+
+    prefs.getString("username").then((loginName) {
+      if (loginName.isNotEmpty) {
+        loginController.text = loginName;
+        displaySnackBar();
+      }
+    });
+
+    prefs.getString("password").then((loginPass) {
+      if (loginPass.isNotEmpty) {
+        passwordController.text = loginPass;
+        displaySnackBar();
+      }
+    });
   }
 
   @override
@@ -56,7 +78,31 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
+  void saveInfo () {
+    prefs.setString("username", loginController.value.text);
+    prefs.setString("password", passwordController.value.text);
+    Navigator.pop(context);
+  }
+
+  void deleteInfo () {
+    prefs.remove("username");
+    prefs.remove("password");
+    Navigator.pop(context);
+  }
+
   void buttonClicked() {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('IMPORTANT'),
+        content: const Text('Do you wish to save your login information?'),
+        actions: <Widget>[
+          ElevatedButton( onPressed: saveInfo, child:  Text("Yes")  ),
+          ElevatedButton( onPressed: deleteInfo, child:  Text("No")  )
+        ],
+      ),
+    );
+
     setState(() {
       password = passwordController.value.text;
       if (password == 'ASDF') {
@@ -79,31 +125,13 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
         // Center is a layout widget. It takes a single child and positions it
         // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: .center,
           children: [
             TextField(controller: loginController,
@@ -119,8 +147,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     labelText: "Password"
                 )),
             ElevatedButton( onPressed: buttonClicked, child:  Text("Login")  ),
-            Text(password,
-            ),
             Semantics(label: imageDescription,
                 child: Image.asset(imageSource, height:300.0, width:300.0)
             )
