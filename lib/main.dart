@@ -1,36 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:my_flutter_labs/DataRepository.dart';
-import 'ProfilePage.dart';
+import 'package:my_flutter_labs/ShoppingListItemDAO.dart';
+import 'ShoppingListItem.dart';
+import 'database.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final database = await $FloorAppDatabase
+  .databaseBuilder('app_database.db')
+  .build();
+
+  final dao = database.shoppingListItemDAO;
+
+  runApp(MyApp(dao));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ShoppingListItemDAO dao;
+
+  const MyApp(this.dao, {super.key});
 
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: '/',
-      routes: {
-        '/': (context) => MyHomePage(title: 'Home'),
-        '/profilePage': (context) => ProfilePage()
-      },
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
+      home: MyHomePage(title: 'Home', dao: dao),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.dao});
 
   final String title;
+  final ShoppingListItemDAO dao;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -41,12 +49,18 @@ class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController itemController;
   late TextEditingController quantityController;
 
-  List<String> words =  [];
-  List<String> quantities =  [];
+  List<ShoppingListItem> myList = [];
 
   @override
   void initState() {
     super.initState();
+
+    //get all list items from dao, insert into empty array and update
+    widget.dao.findAllShoppingListItems().then(
+            (list) {
+          setState((){myList = list;
+          } );
+        });
 
     itemController = TextEditingController();
     quantityController = TextEditingController();
@@ -72,10 +86,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           ElevatedButton(
             child: Text("YES"),
-            onPressed: () {
+            onPressed: () async {
+              final item = myList[index];
+              await widget.dao.deleteShoppingListItem(item);
               setState(() {
-                words.removeAt(index);
-                quantities.removeAt(index);
+                myList.removeAt(index);
                 Navigator.of(context).pop();
               });
             },
@@ -110,10 +125,11 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                final shoppingListItem = ShoppingListItem(ShoppingListItem.ID++, itemController.text, int.parse(quantityController.text));
+                await widget.dao.insertShoppingListItem(shoppingListItem);
                 setState(() {
-                  words.add(itemController.text);
-                  quantities.add(quantityController.text);
+                  myList.add(shoppingListItem);
                   itemController.clear();
                   quantityController.clear();
                 });
@@ -122,18 +138,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        if (words.isEmpty)
+        if (myList.isEmpty)
           Text("There are no items in the list."),
         Expanded(
           child: ListView.builder(
-            itemCount: words.length,
+            itemCount: myList.length,
             itemBuilder: (context, rowNum) {
                 return GestureDetector(child:
                   Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("${rowNum + 1}. ${words[rowNum]}"),
-                    Text(" quantity: ${quantities[rowNum]}")
+                    Text("${rowNum + 1}. ${myList[rowNum].name}"),
+                    Text(" quantity: ${myList[rowNum].quantity}")
                   ],
                 ),
                 onLongPress: () {deleteAlert(rowNum);});
