@@ -83,9 +83,9 @@ class _MyHomePageState extends State<MyHomePage> {
     if( (width>height) && (width > 720)) {
       return Row(
           children:[
-            Expanded(flex: 1,
+            Expanded(flex: 2,
                 child: ListPage()),
-            Expanded(flex: 1,
+            Expanded(flex: 3,
                 child: Container(color: Colors.lightBlueAccent, child: DetailsPage()))
           ]);
     }
@@ -105,9 +105,9 @@ class _MyHomePageState extends State<MyHomePage> {
       return Center(child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("Item: ${selectedItem!.name}"),
-          Text("Quantity: ${selectedItem!.quantity}"),
-          Text("Database ID: ${selectedItem!.id}"),
+          Text("Item: ${selectedItem!.name}", style: TextStyle(fontSize: 25.0)),
+          Text("Quantity: ${selectedItem!.quantity}", style: TextStyle(fontSize: 25.0)),
+          Text("Database ID: ${selectedItem!.id}", style: TextStyle(fontSize: 25.0)),
 
           ElevatedButton(
             child: Text("Delete Item"),
@@ -130,7 +130,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ));
     } else {
-      return Center(child: Text("Nothing Selected!"));
+      return Center(child: Text("Nothing Selected!", style: TextStyle(fontSize: 25.0)));
     }
   }
 
@@ -138,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       children: [
         Row(
-          children: <Widget>[
+          children: [
             Expanded(
               child: TextField(
                 controller: itemController,
@@ -181,8 +181,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("${rowNum + 1}. ${myList[rowNum].name}"),
-                    Text(" quantity: ${myList[rowNum].quantity}")
+                    Text("${rowNum + 1}. ${myList[rowNum].name}", style: TextStyle(fontSize: 20.0)),
+                    Text(" quantity: ${myList[rowNum].quantity}", style: TextStyle(fontSize: 20.0))
                   ],
                 ),
                 onTap: () {
