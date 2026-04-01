@@ -50,6 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late TextEditingController quantityController;
 
   List<ShoppingListItem> myList = [];
+  ShoppingListItem? selectedItem;
 
   @override
   void initState() {
@@ -73,39 +74,71 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void deleteAlert(int index) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Remove an Item"),
-        content: Text("Do you wish to delete this item?"),
-        actions: [
-          ElevatedButton(
-            child: Text("NO"),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          ElevatedButton(
-            child: Text("YES"),
-            onPressed: () async {
-              final item = myList[index];
-              await widget.dao.deleteShoppingListItem(item);
-              setState(() {
-                myList.removeAt(index);
-                Navigator.of(context).pop();
-              });
-            },
-          )
-        ],
-      ),
-    );
+  Widget reactiveLayout(){
+
+    var size = MediaQuery.of(context).size;
+    var height = size.height;
+    var width = size.width;
+
+    if( (width>height) && (width > 720)) {
+      return Row(
+          children:[
+            Expanded(flex: 2,
+                child: ListPage()),
+            Expanded(flex: 3,
+                child: Container(color: Colors.lightBlueAccent, child: DetailsPage()))
+          ]);
+    }
+    else{
+      if(selectedItem == null){
+        return ListPage();
+      }
+      else
+      {
+        return Container(color: Colors.lightBlueAccent, child: DetailsPage());
+      }
+    }
   }
 
+  Widget DetailsPage() {
+    if (selectedItem != null) {
+      return Center(child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text("Item: ${selectedItem!.name}", style: TextStyle(fontSize: 25.0)),
+          Text("Quantity: ${selectedItem!.quantity}", style: TextStyle(fontSize: 25.0)),
+          Text("Database ID: ${selectedItem!.id}", style: TextStyle(fontSize: 25.0)),
+
+          ElevatedButton(
+            child: Text("Delete Item"),
+            onPressed: () async {
+              await widget.dao.deleteShoppingListItem(selectedItem!);
+              setState(() {
+                myList.remove(selectedItem);
+                selectedItem = null;
+              });
+            },
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                selectedItem = null;
+              });
+            },
+            child: Text("Close"),
+          ),
+        ],
+      ));
+    } else {
+      return Center(child: Text("Nothing Selected!", style: TextStyle(fontSize: 25.0)));
+    }
+  }
 
   Widget ListPage() {
     return Column(
       children: [
         Row(
-          children: <Widget>[
+          children: [
             Expanded(
               child: TextField(
                 controller: itemController,
@@ -148,11 +181,16 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text("${rowNum + 1}. ${myList[rowNum].name}"),
-                    Text(" quantity: ${myList[rowNum].quantity}")
+                    Text("${rowNum + 1}. ${myList[rowNum].name}", style: TextStyle(fontSize: 20.0)),
+                    Text(" quantity: ${myList[rowNum].quantity}", style: TextStyle(fontSize: 20.0))
                   ],
                 ),
-                onLongPress: () {deleteAlert(rowNum);});
+                onTap: () {
+                  setState(() {
+                    selectedItem = myList[rowNum];
+                  });
+                  },
+                );
             },
           ),
         ),
@@ -167,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: ListPage()
+      body: reactiveLayout()
     );
   }
 }
